@@ -4,7 +4,7 @@
   "description": "Simple profile updater for salesforce.",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "updateProfiles": "node index.js"
   },
   "author": "Peter van Gulik",
   "license": "ISC",

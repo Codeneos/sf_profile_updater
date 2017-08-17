@@ -186,11 +186,9 @@ getProfileList().then(profiles => {
     return Promise.all(profileUpdates);
 }).then(result => {
     logger.info("Done - Updated all profiles!");
-    process.exit();
 }).catch(err => {
     logger.error("Profile updates failed :( - see the error below for more details");
     logger.error(err);
-    process.exit(1);
 });
 
 
