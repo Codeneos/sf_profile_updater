@@ -15,5 +15,5 @@ At this moment the profile updater only updates APEX class visbility based on th
 Normally you should only have to change the `srcDir` setting to point to the directory in which your SalesForce source are located.
 
 ## Usage
-Simply call `npm run` to start the updater.
+Simply call `npm run updateProfiles` to start the updater.
    
