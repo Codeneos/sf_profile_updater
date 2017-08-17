@@ -1,0 +1,16 @@
+{
+  "name": "sf_profile_updater",
+  "version": "1.0.0",
+  "description": "Simple profile updater for salesforce.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Peter van Gulik",
+  "license": "ISC",
+  "dependencies": {
+    "colors": "^1.1.2",
+    "dateformat": "^2.0.0",
+    "xml2js": "^0.4.18"
+  }
+}
