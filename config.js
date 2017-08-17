@@ -5,11 +5,13 @@
  */
  module.exports = {
     // Salesforce sources directory  can either be a relative or absolute directory
-    srcDir: "..\\src",
+    srcDir: "..\\telfort_dev17\\src",
     // directory in which the profiles are stored
     profileDir: "profiles",
     // directory in which the classes are stores
     classesDir: "classes",
+    // directory in which the objects are stores
+    objectDir: "objects",
     // default visibiliy setting for new classes
     defaultClassVisibility: false,
 

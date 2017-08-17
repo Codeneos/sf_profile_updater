@@ -110,6 +110,55 @@ var setClassAccesses = function (profile, className, enabled) {
     });
 };
 
+var loadLocalObjectData = function() {
+    return new Promise((resolve, reject) => {
+        fs.readdir(path.join(config.srcDir, config.objectDir), (err, files) => {
+            if(err) return reject(err);
+            var readMdProm = [];
+            files.forEach(file => {
+                if(!file.endsWith('.object')) return;
+                var objectName = file.replace('.object','');
+                readMdProm.push(
+                    getObjectMetaData(objectName).then(result => {
+                        return {
+                            file: path.join(config.srcDir, config.classesDir, objectName + '.object'),
+                            name: objectName, 
+                            metaData: result.CustomObject
+                        };
+                    })
+                );                
+            }, this);
+            Promise.all(readMdProm).then(
+                result => {
+                    resolve(result);
+                }
+            );
+        })
+    });
+};
+
+var getObjectMetaData = function(objectName) {
+    var objectFile = path.join(config.srcDir, config.objectDir, objectName + '.object');
+    return new Promise((resolve, reject) => {
+        fs.access(objectFile, (err) => {
+            if(err) return reject(err);
+            fs.readFile(objectFile, 'utf8', (err, data) => {
+                if(err) {
+                    logger.error('Failed to read object '+objectName+' meta data file.')
+                    return reject(err);
+                }
+                parseString(data,  (err, result) => {
+                    if(err) {
+                        logger.error('Failed to parse object '+objectName+' meta data.');
+                        return reject(err);
+                    }
+                    resolve(result);
+                }); 
+            });    
+        });
+    });
+};
+
 var getProfileList = function () {
     return new Promise((resolve, reject) => {
         fs.readdir(path.join(config.srcDir, config.profileDir), (err, files) => {
@@ -165,6 +214,54 @@ var updateProfileClassAccesses = function(profileName, defaultVisibility) {
     });
 }
 
+var updateProfileFieldPermissions = function(profileName, defaultEditable, defaultReadable) {
+    return new Promise((resolve, reject) => {
+        readProfile(profileName).then((profileData) => {    
+            loadLocalObjectData().then(objects => {
+                // creat map to map field names to indexes
+                var profileFieldMap = {};
+                profileData.Profile.fieldPermissions.forEach((c, i) => {
+                    profileFieldMap[c.field] = { name: c.field, profileIndex: i };
+                });
+                
+                // get fields from objects
+                var localFields = [];
+                objects.forEach(o => {                    
+                    // ski objects without fields
+                    if(!o.metaData.fields) return;
+                    o.metaData.fields.forEach(f => { 
+                        var localFieldName = o.name + '.' + f.fullName;
+                        // check if we have the field
+                        if (!profileFieldMap.hasOwnProperty(localFieldName)) {
+                            logger.info('Add missing field '+localFieldName+' to profile.');
+                        } else {
+                            delete profileFieldMap[localFieldName];
+                        }
+                    });                    
+                });
+
+                // drop not found classes
+                logger.info('Found ' + Object.keys(profileFieldMap).length + ' fields in the rofile that do not exist in the object definitions');
+                Object.keys(profileFieldMap).forEach(k => {
+                    logger.info('Delete ' + profileFieldMap[k].name + ' from profile');
+                    //delete profileData.Profile.fieldPermissions[profileFieldMap[k].profileIndex];
+                });
+            })
+            .then(() => {
+                //logger.info('Saving profile ' + profileName);
+                /*saveProfile(profileName, profileData)
+                    .then(() => { resolve(); })
+                    .catch(err => { reject(err); });*/
+                resolve();
+            }).catch(err => {
+                logger.error('Failed to update profile ' + profileName);
+                logger.error(err);
+                reject(err);
+            });
+        });
+    });
+}
+
 /*
  * Main function starts here
  */
@@ -180,7 +277,8 @@ getProfileList().then(profiles => {
             : config.defaultClassVisibility;
         logger.info("Updating class visibility in profile '" + profileName + "' with new class visbility: " + visibility);
         profileUpdates.push(
-            updateProfileClassAccesses(profileName, visibility)
+            updateProfileClassAccesses(profileName, visibility)//,
+            //updateProfileFieldPermissions(profileName, true, true)
         );
     });
     return Promise.all(profileUpdates);
