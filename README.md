@@ -17,6 +17,8 @@ Normally you should only have to change the `srcDir` setting to point to the dir
 ## Usage
 Simply call `npm run updateProfiles` to start the updater.
 
+![action]
+
 ## Config file
 The config file tries to be simple and straight forward and allows you to setup the tool to your liking/requirements. See below for the default config file that ships with it:
 ```javascript
@@ -82,3 +84,5 @@ The config file tries to be simple and straight forward and allows you to setup 
     }
 };
 ```
+
+[action]: https://raw.githubusercontent.com/Codeneos/sf_profile_updater/master/readme/action.png "The updater in action!"
