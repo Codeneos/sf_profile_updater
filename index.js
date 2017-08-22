@@ -10,6 +10,13 @@ var parseString = require('xml2js').parseString;
 var logger = require('./logger');
 var config = require('./config');
 
+var stringCompare = function (a, b) {
+    if (a == b) {
+        return  a > b ? 1 : a < b ? -1 : 0;
+    }
+    return a > b ? 1 : -1;
+};
+
 var readProfile = function(name) {
     var profileFile = path.join(config.srcDir, config.profileDir, name + '.profile');
     return new Promise((resolve, reject) => {
@@ -199,6 +206,14 @@ var updateProfileClassAccesses = function (profileData, defaultVisibility) {
                 Object.keys(profileClassMap).forEach(k => {
                     logger.info('Delete ' + profileClassMap[k].name + ' from profile');
                     delete profileData.Profile.classAccesses[profileClassMap[k].profileIndex];
+                });
+            }
+
+            // sort classes
+            if(config.sortClasses.enabled) {
+                var compareFunc = config.sortClasses.compareFunction || stringCompare;
+                profileData.Profile.classAccesses.sort((a, b) => {
+                    return compareFunc(a.apexClass[0], b.apexClass[0]);
                 });
             }
 

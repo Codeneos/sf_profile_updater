@@ -36,6 +36,14 @@
         'Admin': true
     },
 
+    // sort classes in a particular order
+    sortClasses : {
+        enabled: true,
+        // Comment out the below config line to 
+        // specify a custom function usto use for class name comparing
+        //compareFunction: null
+    },
+
      // per profile overrides for new fields only
     fieldPermision: {
         // based on profiles
