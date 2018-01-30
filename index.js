@@ -117,6 +117,32 @@ var setClassAccesses = function (profile, className, enabled) {
     });
 };
 
+var dropFieldPermission = function (profile, field, canRead, canWrite) {
+    for (var i = 0; i < profile.fieldPermissions.length; i++) {
+        var entry = profile.fieldPermissions[i];
+        if (entry && entry.field[0] == field) {
+            delete profile.fieldPermissions[i];
+            return;
+        }
+    };
+};
+
+var setFieldPermission = function (profile, field, canRead, canWrite) {
+    for (var i = 0; i < profile.fieldPermissions.length; i++) {
+        var entry = profile.fieldPermissions[i];
+        if (entry.field[0] == field) {
+            entry.editable[0] = JSON.stringify(canWrite);
+            entry.readable[0] = JSON.stringify(canRead);
+            return;
+        }
+    };    
+    profile.fieldPermissions.push({
+        editable: [JSON.stringify(canWrite)],
+        field: [field],
+        readable: [JSON.stringify(canRead)]
+    });
+};
+
 var loadLocalObjectData = function() {
     return new Promise((resolve, reject) => {
         fs.readdir(path.join(config.srcDir, config.objectDir), (err, files) => {
@@ -217,6 +243,14 @@ var updateProfileClassAccesses = function (profileData, defaultVisibility) {
                 });
             }
 
+            if(config.sortFields.enabled) {
+                var compareFunc = config.sortFields.compareFunction || stringCompare;
+                logger.info('Sorting field based on name');
+                profileData.Profile.fieldPermissions.sort((a, b) => {
+                    return compareFunc(a.field[0], b.field[0]);
+                });
+            }
+
             resolve(profileData);
         })
         .catch(err => {
@@ -241,12 +275,16 @@ var updateProfileFieldPermissions = function (profileData, defaultReadable, defa
                 // ski objects without fields
                 if (!o.metaData.fields) return;
                 o.metaData.fields.forEach(f => {
+                    // Skip required fields
+                    if (!f.required || f.required == 'true') {
+                        return;
+                    }
                     var localFieldName = o.name + '.' + f.fullName;
                     // check if we have the field
                     if (!profileFieldMap.hasOwnProperty(localFieldName)) {
-                        if(!config.scanner.addFields) return;
+                        if (!config.scanner.addFields) return;                        
                         logger.info('Profile data is missing field ' + localFieldName + '; adding to profile');
-                        // TODO: Set fields
+                        setFieldPermission(profileData.Profile, localFieldName, defaultReadable, defaultEditable);
                     } else {
                         delete profileFieldMap[localFieldName];
                     }
@@ -255,7 +293,7 @@ var updateProfileFieldPermissions = function (profileData, defaultReadable, defa
 
             // drop not found fields
             if (Object.keys(profileFieldMap).length > 0 && config.scanner.removeFields) {
-                logger.info('Found ' + Object.keys(profileFieldMap).length + ' fields in the rofile that do not exist in the object definitions');
+                logger.info('Found ' + Object.keys(profileFieldMap).length + ' fields in the profile that do not exist in the object definitions');
                 Object.keys(profileFieldMap).forEach(k => {
                     logger.info('Delete ' + profileFieldMap[k].name + ' from profile');
                     // TODO: Delete fields
@@ -311,7 +349,7 @@ getProfileList().then(profiles => {
                 return { name: profileName, status: true };
             })
             .catch(err => {
-                logger.error("Failed to update/save profile  '"+profileName+"");
+                logger.error("Failed to update/save profile "+profileName+" - " + err);
                 return { name: profileName, status: false, error: err };
             })
         );

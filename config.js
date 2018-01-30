@@ -21,7 +21,7 @@
         addClasses: true,
         // field config
         removeFields: false,
-        addFields: false,
+        addFields: true,
     },
 
     // default visibiliy setting for new classes and fields
@@ -38,6 +38,14 @@
 
     // sort classes in a particular order
     sortClasses : {
+        enabled: true,
+        // Comment out the below config line to 
+        // specify a custom function usto use for class name comparing
+        //compareFunction: null
+    },
+
+    // sort field permission in a particular order
+    sortFields : {
         enabled: true,
         // Comment out the below config line to 
         // specify a custom function usto use for class name comparing
