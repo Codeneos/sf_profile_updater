@@ -243,14 +243,6 @@ var updateProfileClassAccesses = function (profileData, defaultVisibility) {
                 });
             }
 
-            if(config.sortFields.enabled) {
-                var compareFunc = config.sortFields.compareFunction || stringCompare;
-                logger.info('Sorting field based on name');
-                profileData.Profile.fieldPermissions.sort((a, b) => {
-                    return compareFunc(a.field[0], b.field[0]);
-                });
-            }
-
             resolve(profileData);
         })
         .catch(err => {
@@ -276,10 +268,15 @@ var updateProfileFieldPermissions = function (profileData, defaultReadable, defa
                 if (!o.metaData.fields) return;
                 o.metaData.fields.forEach(f => {
                     // Skip required fields
-                    if (!f.required || f.required == 'true') {
+                    if (f.required == undefined || f.required == 'true') {
                         return;
                     }
                     var localFieldName = o.name + '.' + f.fullName;
+                    // skip ignored fields
+                    if (config.ignoredFields && 
+                        config.ignoredFields.some(ignorePattern => new RegExp(ignorePattern).test(localFieldName))) {
+                        return;
+                    }
                     // check if we have the field
                     if (!profileFieldMap.hasOwnProperty(localFieldName)) {
                         if (!config.scanner.addFields) return;                        
@@ -296,8 +293,15 @@ var updateProfileFieldPermissions = function (profileData, defaultReadable, defa
                 logger.info('Found ' + Object.keys(profileFieldMap).length + ' fields in the profile that do not exist in the object definitions');
                 Object.keys(profileFieldMap).forEach(k => {
                     logger.info('Delete ' + profileFieldMap[k].name + ' from profile');
-                    // TODO: Delete fields
-                    //delete profileData.Profile.fieldPermissions[profileFieldMap[k].profileIndex];
+                    delete profileData.Profile.fieldPermissions[profileFieldMap[k].profileIndex];
+                });
+            }
+
+            // Sort fields
+            if(config.sortFields.enabled) {
+                var compareFunc = config.sortFields.compareFunction || stringCompare;
+                profileData.Profile.fieldPermissions.sort((a, b) => {
+                    return compareFunc(a.field[0], b.field[0]);
                 });
             }
 

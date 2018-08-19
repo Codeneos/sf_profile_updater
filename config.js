@@ -5,7 +5,7 @@
  */
  module.exports = {
     // Salesforce sources directory  can either be a relative or absolute directory
-    srcDir: "..\\src",
+    srcDir: "../telfort_order_track/src",
     // directory in which the profiles are stored
     profileDir: "profiles",
     // directory in which the classes are stores
@@ -52,7 +52,18 @@
         //compareFunction: null
     },
 
-     // per profile overrides for new fields only
+    // prevent certain fields from being added to the profile
+    ignoredFields: [
+        'vlocity_cmt__',
+        '^ServiLink__c',
+        '^Case',
+        '^Customers__c',
+        '^Contacts__c',
+        '^Partners__c',
+        '__mdt'
+    ],
+
+    // per profile overrides for new fields only
     fieldPermision: {
         // based on profiles
         'Admin': {
